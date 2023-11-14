@@ -19,6 +19,8 @@ header {
     z-index: 1000; /* ヘッダーを他の要素よりも前面に表示 */
     color: #666; /* グレーのテキストカラーに変更 */
     font-size: 0.75em; /* フォントサイズを半分に縮小 */
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 300;
 
 }
 
@@ -36,6 +38,28 @@ header {
 main {
     margin-top: 60px; /* ヘッダーの高さを考慮 */
     text-align: center;
+}
+
+/* リンクのスタイル変更 */
+a {
+    color: inherit; /* 親要素の文字色を継承 */
+    text-decoration: none; /* 下線をなくす */
+}
+
+/* 左の空白を追加 */
+#about {
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 300;
+    margin-left: 2vw; /* 適宜調整 */
+    text-align: left;
+}
+
+iframe {
+    max-width: 100%; /* 親要素の幅に合わせる */
+    height: auto; /* アスペクト比を保つ */
+    display: block; /* インライン要素としてではなく、ブロック要素として扱う */
+    margin: left auto; /* 水平方向に中央寄せ */
+
 }
 
 img {
