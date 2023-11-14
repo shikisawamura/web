@@ -22,6 +22,12 @@ header {
 
 }
 
+@media screen and (max-width: 600px) {
+    header {
+        font-size: 1em; /* モバイルビューにおいてフォントサイズを拡大 */
+    }
+}
+
 #site-title {
   font-family: 'Open Sans Light', sans-serif; /* Open Sans Lightを使用 */
   color: #666;

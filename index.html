@@ -8,6 +8,15 @@
     <title>SHIKI SAWAMURA</title>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <!-- 画像のプリロード用のJavaScriptを追加 -->
+    <style>
+        /* 追加のスタイル */
+        #loading-message {
+            display: none;
+            text-align: center;
+            padding: 10px;
+        }
+    </style>
 </head>
 
 <body>
@@ -15,15 +24,78 @@
         <h1 id="site-title">SHIKI SAWAMURA</h1>
     </header>
 
-    <main>
-        <!-- ここに画像ギャラリーを表示するコードを挿入 -->
-        <img src="images/photo1.jpg" alt="画像の説明">
-        <img src="images/photo2.jpg" alt="画像の説明">
+    <main id="photo-container">
+        <!-- ローディングメッセージ -->
+        <p id="loading-message">Loading...</p>
     </main>
 
     <footer>
         <a href="about.html">About</a>
     </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const photoContainer = document.getElementById('photo-container');
+            const loadingMessage = document.getElementById('loading-message');
+            const initialImageCount = 10; // 初期表示時の画像の数
+            const imagesPerPage = 10; // スクロールごとに読み込む画像の数
+
+
+            const totalImages = 11; // 画像の総数
+
+
+
+            const imagePaths = generateImagePaths(totalImages);
+
+            let isLoading = false;
+            let currentIndex = 0;
+
+            // 画像のパスを生成
+            function generateImagePaths(count) {
+                const paths = [];
+                for (let i = count; i >= 1; i--) {
+                    const paddedIndex = i.toString().padStart(4, '0');
+                    paths.push(`images/photo${paddedIndex}.jpg`);
+                }
+                return paths;
+            }
+
+            // 画像を作成してコンテナに追加
+            function appendImage(path) {
+                const img = new Image();
+                img.src = path;
+                img.alt = '画像の説明';
+                photoContainer.appendChild(img);
+            }
+
+            // 初期表示時に画像を表示
+            for (let i = 0; i < initialImageCount; i++) {
+                appendImage(imagePaths[currentIndex]);
+                currentIndex++;
+            }
+
+            // 画像の読み込みを開始
+            window.addEventListener('scroll', function () {
+                if (!isLoading && window.innerHeight + window.scrollY >= document.body.offsetHeight - 200) {
+                    isLoading = true;
+                    loadingMessage.style.display = 'block';
+
+                    // 画像を追加読み込み
+                    setTimeout(function () {
+                        for (let i = 0; i < imagesPerPage; i++) {
+                            if (currentIndex < totalImages) {
+                                appendImage(imagePaths[currentIndex]);
+                                currentIndex++;
+                            }
+                        }
+                        isLoading = false;
+                        loadingMessage.style.display = 'none';
+                    }, 1000); // 適切な遅延を設定
+                }
+            });
+        });
+    </script>
+
 </body>
 
 </html>
