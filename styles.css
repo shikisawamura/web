@@ -1,0 +1,62 @@
+body {
+  font-family: 'Roboto', sans-serif; /* Montserratを使用 */
+  margin: 0;
+    padding: 0;
+    background-color: #f8f8f8; /* オフホワイトの背景色 */
+    color: #333; /* 本文のテキストカラーを指定 */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+header {
+    position: fixed;
+    top: 0;
+    left: 1vw; /* 左端からの空白を画面解像度に応じて変更 */
+    background-color: transparent; /* 背景を透明に変更 */
+    padding: 10px;
+    width: 100%;
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0); /* 影を削除 */
+    z-index: 1000; /* ヘッダーを他の要素よりも前面に表示 */
+    font-weight: 300; /* より細いフォントに変更 */
+    color: #666; /* グレーのテキストカラーに変更 */
+    font-size: 0.75em; /* フォントサイズを半分に縮小 */
+
+}
+
+#site-title {
+    margin: 0;
+}
+
+main {
+    margin-top: 60px; /* ヘッダーの高さを考慮 */
+    text-align: center;
+}
+
+img {
+    max-width: 100%;
+    max-height: 100vh; /* 画像の高さをビューポートの高さに合わせる */
+    width: auto;
+    height: auto;
+    margin: 0 auto;
+    padding: 20px; /* 画像周りの余白 */
+    box-sizing: border-box;
+}
+
+footer {
+    position: fixed;
+    bottom: 0;
+    left: 1vw; /* 左端からの空白を画面解像度に応じて変更 */
+    background-color: transparent; /* 背景を透明に変更 */
+    padding: 10px;
+    width: 100%;
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0); /* 影を削除 */
+    font-size: 16px; /* フォントサイズを上げる */
+    text-decoration: underline; /* 下線を追加 */
+
+
+}
+
+footer a {
+    text-decoration: none;
+    color: #333;
+}
