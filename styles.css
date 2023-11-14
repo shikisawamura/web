@@ -1,12 +1,11 @@
 body {
   font-family: 'Open Sans', sans-serif;
-  font-family: 'Roboto', sans-serif;
+  font-weight: 300;
   margin: 0;
     padding: 0;
     background-color: #f8f8f8; /* オフホワイトの背景色 */
     color: #333; /* 本文のテキストカラーを指定 */
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+
 }
 
 header {
@@ -24,7 +23,8 @@ header {
 }
 
 #site-title {
-    margin: 0;
+  font-family: 'Open Sans Light', sans-serif; /* Open Sans Lightを使用 */
+  color: #666;
 }
 
 main {
