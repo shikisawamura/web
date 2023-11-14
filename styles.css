@@ -32,6 +32,7 @@ header {
 
 #site-title {
   font-family: 'Open Sans Light', sans-serif; /* Open Sans Lightを使用 */
+  font-weight: 300;
   color: #666;
 }
 
