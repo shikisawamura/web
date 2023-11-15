@@ -52,16 +52,11 @@
             const loadingMessage = document.getElementById('loading-message');
             const initialImageCount = 10; // 初期表示時の画像の数
             const imagesPerPage = 10; // スクロールごとに読み込む画像の数
-
-
-            const totalImages = 20; // 画像の総数
-
-
-
+            const totalImages = 597; // 画像の総数
             const imagePaths = generateImagePaths(totalImages);
 
             let isLoading = false;
-            let currentIndex = 0;
+            let currentIndex = initialImageCount;
 
             // 画像のパスを生成
             function generateImagePaths(count) {
@@ -83,8 +78,7 @@
 
             // 初期表示時に画像を表示
             for (let i = 0; i < initialImageCount; i++) {
-                appendImage(imagePaths[currentIndex]);
-                currentIndex++;
+                appendImage(imagePaths[i]);
             }
 
             // 画像の読み込みを開始
@@ -104,10 +98,6 @@
                         isLoading = false;
                         loadingMessage.style.display = 'none';
                     }, 1000); // 適切な遅延を設定
-                }
-            });
-        });
-    </script>
 
 </body>
 
