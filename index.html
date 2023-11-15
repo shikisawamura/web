@@ -51,7 +51,7 @@
             const photoContainer = document.getElementById('photo-container');
             const loadingMessage = document.getElementById('loading-message');
             const initialImageCount = 10; // 初期表示時の画像の数
-            const imagesPerPage = 10; // スクロールごとに読み込む画像の数
+            const imagesPerPage = 20; // スクロールごとに読み込む画像の数
             const totalImages = 597; // 画像の総数
             const imagePaths = generateImagePaths(totalImages);
 
@@ -98,6 +98,10 @@
                         isLoading = false;
                         loadingMessage.style.display = 'none';
                     }, 1000); // 適切な遅延を設定
+                }
+            });
+        });
+    </script>
 
 </body>
 
