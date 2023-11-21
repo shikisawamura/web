@@ -37,7 +37,7 @@ header {
 }
 
 main {
-    margin-top: 60px; /* ヘッダーの高さを考慮 */
+    margin-top: 10vh; /* ヘッダーの高さを考慮 */
     text-align: center;
 }
 
