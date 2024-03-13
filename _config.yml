@@ -1,0 +1,5 @@
+theme: jekyll-theme-minimal
+title: shiki sawamura
+description: shiki sawamura | 澤村 思輝
+plugins:
+  - jekyll-sitemap
