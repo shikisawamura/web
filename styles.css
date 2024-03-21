@@ -91,3 +91,18 @@ footer a {
     text-decoration: none;
     color: #333;
 }
+
+.youtube-container {
+  position: relative;
+  padding-bottom: 56.25%; /* 動画の縦横比 (9:16) を維持するために必要 */
+  height: 0;
+  overflow: hidden;
+}
+
+.youtube-container iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 90%;
+  height: 90%;
+}
