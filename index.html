@@ -56,6 +56,7 @@
             overflow-y: hidden;
             scrollbar-width: none;
             -ms-overflow-style: none;
+            cursor: grab;
         }
         #photo-container::-webkit-scrollbar {
             display: none;
@@ -65,6 +66,7 @@
             width: auto;
             margin-right: 10px;
             transition: opacity 0.5s ease;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -73,7 +75,6 @@
         <h1 id="site-title">SHIKI SAWAMURA</h1>
     </header>
     <main id="photo-container">
-        <div id="position-info"></div>
         <p id="loading-message">Loading...</p>
     </main>
     <footer>
@@ -81,7 +82,6 @@
     </footer>
     <script>
         const firstImageId = 'image_0';
-        let firstImageRect;
 
         function adjustHeaderFooterSize() {
             const windowHeight = window.innerHeight;
@@ -97,7 +97,6 @@
         document.addEventListener('DOMContentLoaded', function () {
             const photoContainer = document.getElementById('photo-container');
             const loadingMessage = document.getElementById('loading-message');
-            const totalWidthValue = document.getElementById('total-width-value');
             const initialImageCount = 20;
             const imagesPerPage = 20;
             const totalImages = 637;
@@ -105,6 +104,11 @@
             let isLoading = false;
             let currentIndex = initialImageCount;
             let displayedIndex = 0;
+
+            // ドラッグスクロール用の変数
+            let isDragging = false;
+            let startX;
+            let scrollLeft;
 
             function generateImagePaths(count) {
                 const paths = [];
@@ -126,9 +130,11 @@
                 const imageId = 'image_' + index;
                 img.id = imageId;
                 photoContainer.appendChild(img);
-                if (index === 0) {
-                    firstImageRect = img.getBoundingClientRect();
-                }
+                
+                // 画像クリックで中央表示する機能を追加
+                img.addEventListener('click', function() {
+                    centerImage(this);
+                });
             }
 
             function loadNextImage() {
@@ -139,96 +145,53 @@
                 }
             }
 
+            // ドラッグスクロール機能の実装
+            photoContainer.addEventListener('mousedown', function(e) {
+                isDragging = true;
+                startX = e.pageX - photoContainer.offsetLeft;
+                scrollLeft = photoContainer.scrollLeft;
+                photoContainer.style.cursor = 'grabbing';
+            });
+
+            photoContainer.addEventListener('mouseleave', function() {
+                isDragging = false;
+                photoContainer.style.cursor = 'grab';
+            });
+
+            photoContainer.addEventListener('mouseup', function() {
+                isDragging = false;
+                photoContainer.style.cursor = 'grab';
+            });
+
+            photoContainer.addEventListener('mousemove', function(e) {
+                if (!isDragging) return;
+                e.preventDefault();
+                const x = e.pageX - photoContainer.offsetLeft;
+                const walk = (x - startX) * 2; // スクロール速度調整
+                photoContainer.scrollLeft = scrollLeft - walk;
+            });
+
+            // 画像を中央に表示する関数
+            function centerImage(img) {
+                const containerWidth = photoContainer.offsetWidth;
+                const imgWidth = img.offsetWidth;
+                const imgLeft = img.offsetLeft;
+                const targetScrollLeft = imgLeft - (containerWidth - imgWidth) / 2;
+                
+                // スムーズスクロールでアニメーション効果を追加
+                photoContainer.scrollTo({
+                    left: targetScrollLeft,
+                    behavior: 'smooth'
+                });
+            }
+
+            // 初期画像のロード
             for (let i = 0; i < initialImageCount; i++) {
                 appendImage(imagePaths[i], i);
                 displayedIndex++;
             }
 
-            window.addEventListener('scroll', function () {
-                if (!isLoading && window.innerWidth + window.scrollX >= photoContainer.scrollLeft + photoContainer.offsetWidth - 200) {
-                    isLoading = true;
-                    loadingMessage.style.display = 'block';
-                    setTimeout(function () {
-                        for (let i = 0; i < imagesPerPage; i++) {
-                            if (currentIndex < totalImages) {
-                                loadNextImage();
-                            }
-                        }
-                        isLoading = false;
-                        loadingMessage.style.display = 'none';
-                    }, 1000);
-                }
-            });
-
-            function drawPositionMarker() {
-                console.log('drawPositionMarker called');
-                let firstImageElement = document.getElementById(firstImageId);
-                let firstImageRect = firstImageElement.getBoundingClientRect();
-                let paddingRight = 10;
-                let widthWithPadding = firstImageElement.offsetWidth + paddingRight;
-
-                console.log('firstImageRect.left:', firstImageRect.left);
-
-                const existingMarker = document.getElementById('position-marker');
-                if (existingMarker) {
-                    existingMarker.remove();
-                }
-                const existingLine = document.getElementById('red-line');
-                if (existingLine) {
-                    existingLine.remove();
-                }
-
-                firstImageElement = document.getElementById(firstImageId);
-                firstImageRect = firstImageElement.getBoundingClientRect();
-                widthWithPadding = firstImageElement.offsetWidth + 10;
-
-                const totalWindowWidth = widthWithPadding * totalImages;
-                const markerPosition = ((Math.abs(firstImageRect.left) / totalWindowWidth) * 100)/3 + 33.33;
-
-                const marker = document.createElement('div');
-                marker.id = 'position-marker';
-                marker.style.position = 'fixed';
-                marker.style.bottom = `10vh`;
-                marker.style.left = `${markerPosition}%`;
-                marker.style.width = '7px';
-                marker.style.height = '7px';
-                marker.style.borderRadius = '50%';
-                marker.style.backgroundColor = '#666';
-                marker.style.zIndex = '1000';
-                document.body.appendChild(marker);
-
-                const redLine = document.createElement('div');
-                redLine.id = 'red-line';
-                redLine.style.position = 'fixed';
-                redLine.style.bottom = `calc(10vh + 3px)`;
-                redLine.style.left = '33.33%';
-                redLine.style.width = '33.33%';
-                redLine.style.height = '1px';
-                redLine.style.backgroundColor = '#666';
-                document.body.appendChild(redLine);
-            }
-
-            function updateStyles() {
-                const isWideScreen = window.innerWidth > window.innerHeight;
-                if (isWideScreen) {
-                    photoContainer.style.flexDirection = 'row';
-                    drawPositionMarker();
-                } else {
-                    photoContainer.style.flexDirection = 'column';
-                    const marker = document.getElementById('position-marker');
-                    if (marker) {
-                        marker.style.display = 'none';
-                    }
-                    const line = document.getElementById('red-line');
-                    if (line) {
-                        line.style.display = 'none';
-                    }
-                }
-            }
-
-            window.addEventListener('resize', updateStyles);
-            updateStyles();
-
+            // ホイールスクロール
             window.addEventListener('wheel', function (event) {
                 if (window.innerWidth > window.innerHeight) {
                     const deltaY = event.deltaY;
@@ -238,6 +201,7 @@
                 }
             });
 
+            // コンテナスクロール時に追加画像ロード
             photoContainer.addEventListener('scroll', function () {
                 if (!isLoading && photoContainer.scrollLeft >= photoContainer.scrollWidth - photoContainer.offsetWidth - 200) {
                     isLoading = true;
@@ -254,22 +218,18 @@
                 }
             });
 
-            photoContainer.addEventListener('scroll', function () {
-                drawPositionMarker();
-            });
-
-            function updatePositionInfo() {
-                const paddingRight = 10;
-                widthWithPadding = firstImageRect.width + paddingRight;
+            // 画面サイズに応じてスタイルを更新
+            function updateStyles() {
+                const isWideScreen = window.innerWidth > window.innerHeight;
+                if (isWideScreen) {
+                    photoContainer.style.flexDirection = 'row';
+                } else {
+                    photoContainer.style.flexDirection = 'column';
+                }
             }
 
-            if (window.innerWidth > window.innerHeight) {
-                updatePositionInfo();
-                drawPositionMarker();
-                photoContainer.addEventListener('scroll', function () {
-                    drawPositionMarker();
-                });
-            }
+            window.addEventListener('resize', updateStyles);
+            updateStyles();
         });
     </script>
 </body>
