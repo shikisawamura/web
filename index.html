@@ -56,7 +56,6 @@
             overflow-y: hidden;
             scrollbar-width: none;
             -ms-overflow-style: none;
-            cursor: grab;
         }
         #photo-container::-webkit-scrollbar {
             display: none;
@@ -66,7 +65,28 @@
             width: auto;
             margin-right: 10px;
             transition: opacity 0.5s ease;
-            cursor: pointer;
+        }
+
+        /* 縦画面時のスタイル */
+        @media (orientation: portrait) {
+            #photo-container {
+                justify-content: center; /* 左右中央揃え */
+                align-items: center; /* 上下中央揃え */
+                flex-wrap: wrap; /* 縦スクロール対応 */
+                overflow-y: auto; /* 縦スクロールを有効化 */
+                overflow-x: hidden; /* 横スクロールを無効化 */
+                height: calc(100vh - 10vh); /* ヘッダー分を引いた高さ */
+                margin-top: 10vh; /* ヘッダー分の余白を追加 */
+                padding-bottom: 10px; /* フッター分の余白を追加 */
+            }
+
+            #photo-container img {
+                margin-right: 0; /* 横方向の余白を削除 */
+                margin-bottom: 10px; /* 縦方向の余白を追加 */
+                max-width: calc(100% - 20px); /* 横幅が画面サイズに収まるよう調整 */
+                height: auto; /* アスペクト比を維持 */
+                object-fit: contain; /* コンテンツが収まるよう調整 */
+            }
         }
     </style>
 </head>
@@ -75,40 +95,22 @@
         <h1 id="site-title">SHIKI SAWAMURA</h1>
     </header>
     <main id="photo-container">
+        <div id="position-info"></div>
         <p id="loading-message">Loading...</p>
     </main>
     <footer>
         <a href="about.html">About</a>
     </footer>
     <script>
-        const firstImageId = 'image_0';
-
-        function adjustHeaderFooterSize() {
-            const windowHeight = window.innerHeight;
-            const header = document.querySelector('header');
-            const footer = document.querySelector('footer');
-            const headerPadding = windowHeight * 0.01;
-            header.style.padding = `${headerPadding}px`;
-        }
-
-        adjustHeaderFooterSize();
-        window.addEventListener('resize', adjustHeaderFooterSize);
-
         document.addEventListener('DOMContentLoaded', function () {
             const photoContainer = document.getElementById('photo-container');
-            const loadingMessage = document.getElementById('loading-message');
-            const initialImageCount = 20;
-            const imagesPerPage = 20;
-            const totalImages = 637;
+            
+            const initialImageCount = 20; // 初期表示する画像数
+            const imagesPerPage = 20; // ページごとにロードする画像数
+            const totalImages = 637; // 全体の画像数
             const imagePaths = generateImagePaths(totalImages);
-            let isLoading = false;
+            
             let currentIndex = initialImageCount;
-            let displayedIndex = 0;
-
-            // ドラッグスクロール用の変数
-            let isDragging = false;
-            let startX;
-            let scrollLeft;
 
             function generateImagePaths(count) {
                 const paths = [];
@@ -119,7 +121,7 @@
                 return paths;
             }
 
-            function appendImage(path, index) {
+            function appendImage(path) {
                 const img = new Image();
                 img.src = path;
                 img.alt = '画像の説明';
@@ -127,109 +129,50 @@
                 img.onload = function () {
                     img.style.opacity = '1';
                 };
-                const imageId = 'image_' + index;
-                img.id = imageId;
                 photoContainer.appendChild(img);
                 
-                // 画像クリックで中央表示する機能を追加
-                img.addEventListener('click', function() {
-                    centerImage(this);
-                });
-            }
-
-            function loadNextImage() {
-                if (currentIndex < totalImages) {
-                    appendImage(imagePaths[currentIndex], displayedIndex);
-                    currentIndex++;
-                    displayedIndex++;
-                }
-            }
-
-            // ドラッグスクロール機能の実装
-            photoContainer.addEventListener('mousedown', function(e) {
-                isDragging = true;
-                startX = e.pageX - photoContainer.offsetLeft;
-                scrollLeft = photoContainer.scrollLeft;
-                photoContainer.style.cursor = 'grabbing';
-            });
-
-            photoContainer.addEventListener('mouseleave', function() {
-                isDragging = false;
-                photoContainer.style.cursor = 'grab';
-            });
-
-            photoContainer.addEventListener('mouseup', function() {
-                isDragging = false;
-                photoContainer.style.cursor = 'grab';
-            });
-
-            photoContainer.addEventListener('mousemove', function(e) {
-                if (!isDragging) return;
-                e.preventDefault();
-                const x = e.pageX - photoContainer.offsetLeft;
-                const walk = (x - startX) * 2; // スクロール速度調整
-                photoContainer.scrollLeft = scrollLeft - walk;
-            });
-
-            // 画像を中央に表示する関数
-            function centerImage(img) {
-                const containerWidth = photoContainer.offsetWidth;
-                const imgWidth = img.offsetWidth;
-                const imgLeft = img.offsetLeft;
-                const targetScrollLeft = imgLeft - (containerWidth - imgWidth) / 2;
-                
-                // スムーズスクロールでアニメーション効果を追加
-                photoContainer.scrollTo({
-                    left: targetScrollLeft,
-                    behavior: 'smooth'
-                });
+                // 縦画面時に中央揃えを適用
+                updateStyles();
             }
 
             // 初期画像のロード
             for (let i = 0; i < initialImageCount; i++) {
-                appendImage(imagePaths[i], i);
-                displayedIndex++;
+                appendImage(imagePaths[i]);
+                currentIndex++;
             }
 
-            // ホイールスクロール
-            window.addEventListener('wheel', function (event) {
-                if (window.innerWidth > window.innerHeight) {
-                    const deltaY = event.deltaY;
-                    const scrollAmount = deltaY * (window.innerWidth / window.innerHeight);
-                    photoContainer.scrollLeft += scrollAmount;
-                    event.preventDefault();
-                }
-            });
-
-            // コンテナスクロール時に追加画像ロード
+            // スクロールイベントで追加ロード
             photoContainer.addEventListener('scroll', function () {
-                if (!isLoading && photoContainer.scrollLeft >= photoContainer.scrollWidth - photoContainer.offsetWidth - 200) {
-                    isLoading = true;
-                    loadingMessage.style.display = 'block';
-                    setTimeout(function () {
-                        for (let i = 0; i < imagesPerPage; i++) {
-                            if (currentIndex < totalImages) {
-                                loadNextImage();
-                            }
-                        }
-                        isLoading = false;
-                        loadingMessage.style.display = 'none';
-                    }, 1000);
+                if (photoContainer.scrollTop + photoContainer.clientHeight >= photoContainer.scrollHeight - 200) {
+                    for (let i = 0; i < imagesPerPage && currentIndex < totalImages; i++) {
+                        appendImage(imagePaths[currentIndex]);
+                        currentIndex++;
+                    }
                 }
             });
 
-            // 画面サイズに応じてスタイルを更新
+            // レイアウトスタイルを更新する関数
             function updateStyles() {
-                const isWideScreen = window.innerWidth > window.innerHeight;
-                if (isWideScreen) {
-                    photoContainer.style.flexDirection = 'row';
+                const isPortrait = window.innerHeight > window.innerWidth;
+
+                if (isPortrait) {
+                    photoContainer.style.justifyContent = 'center'; // 左右中央揃え
+                    photoContainer.style.alignItems = 'center'; // 上下中央揃え
+                    photoContainer.style.flexWrap = 'wrap'; // 縦スクロール対応
+                    photoContainer.style.overflowY = 'auto';
+                    photoContainer.style.overflowX = 'hidden';
                 } else {
-                    photoContainer.style.flexDirection = 'column';
+                    photoContainer.style.justifyContent = 'flex-start'; // 横スクロール用
+                    photoContainer.style.alignItems = 'flex-start';
+                    photoContainer.style.flexWrap = 'nowrap';
+                    photoContainer.style.overflowX = 'auto';
+                    photoContainer.style.overflowY = 'hidden';
                 }
             }
 
-            window.addEventListener('resize', updateStyles);
+            // 初期化とリサイズ時の更新
             updateStyles();
+            window.addEventListener('resize', updateStyles);
         });
     </script>
 </body>
