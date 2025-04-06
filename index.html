@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SHIKI SAWAMURA | 澤村 思輝</title>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
     <style>
         header {
             position: fixed;
@@ -26,34 +25,31 @@
             display: flex;
             align-items: center;
         }
-        header h1 {
-            margin: 0;
-            height: 10vh;
-            display: flex;
-            align-items: center;
-        }
+
         #loading-message {
             display: none;
             text-align: center;
             padding: 10px;
         }
+
         #photo-container {
             display: flex;
-            flex-wrap: nowrap;
             max-width: 100%;
             overflow-x: auto;
-            overflow-y: hidden;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-            cursor: grab;
+            overflow-y: auto; /* 縦スクロールも許可 */
+            scrollbar-width: none; /* Firefox用 */
+            -ms-overflow-style: none; /* IE用 */
         }
+
         #photo-container::-webkit-scrollbar {
-            display: none;
+            display: none; /* Webkit系ブラウザ用 */
         }
+
         #photo-container img {
             max-height: 80vh;
             width: auto;
-            margin-right: 10px;
+            margin-right: 10px; /* 横並び時の間隔 */
+            margin-bottom: 10px; /* 縦並び時の間隔 */
             transition: opacity 0.5s ease;
         }
     </style>
@@ -65,22 +61,18 @@
     <main id="photo-container">
         <p id="loading-message">Loading...</p>
     </main>
-    <footer>
-        <a href="about.html">About</a>
-    </footer>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const photoContainer = document.getElementById('photo-container');
             const loadingMessage = document.getElementById('loading-message');
             
-            const initialImageCount = 30; // 初期ロードする画像数
+            const initialImageCount = 20; // 初期ロードする画像数
             const imagesPerPage = 20; // 一度にロードする画像数
             const totalImages = 640; // 合計画像数
             const imagePaths = generateImagePaths(totalImages);
             
             let isLoading = false; // ロード中かどうか
             let currentIndex = initialImageCount; // 現在ロードされている画像インデックス
-            let displayedIndex = initialImageCount; // 表示されている最後の画像インデックス
 
             function generateImagePaths(count) {
                 const paths = [];
@@ -91,7 +83,7 @@
                 return paths;
             }
 
-            function appendImage(path, index) {
+            function appendImage(path) {
                 const img = new Image();
                 img.src = path;
                 img.alt = '画像の説明';
@@ -100,73 +92,59 @@
                     img.style.opacity = '1';
                 };
                 photoContainer.appendChild(img);
-                
-                img.addEventListener('click', function () {
-                    centerImage(this);
-                });
-                
-                displayedIndex++;
             }
 
             function loadNextImage() {
                 if (currentIndex < totalImages) {
-                    appendImage(imagePaths[currentIndex], currentIndex);
+                    appendImage(imagePaths[currentIndex]);
                     currentIndex++;
                 }
             }
 
-            function preloadImages(paths, startIndex, count) {
-                for (let i = 0; i < count; i++) {
-                    if (startIndex + i < paths.length) {
-                        const img = new Image();
-                        img.src = paths[startIndex + i];
-                        console.log(`プリロード中：${paths[startIndex + i]}`);
-                    }
-                }
+            // 初期画像のロード
+            for (let i = 0; i < initialImageCount; i++) {
+                appendImage(imagePaths[i]);
+                currentIndex++;
             }
 
-            function centerImage(img) {
-                const containerWidth = photoContainer.offsetWidth;
-                const imgWidth = img.offsetWidth;
-                const imgLeft = img.offsetLeft;
-
-                const targetScrollLeft = imgLeft - (containerWidth - imgWidth) / 2;
-
-                photoContainer.scrollTo({
-                    left: targetScrollLeft,
-                    behavior: 'smooth'
-                });
-            }
-
+            // スクロール位置で追加画像ロード
             photoContainer.addEventListener('scroll', function () {
-                if (!isLoading && photoContainer.scrollLeft >= (photoContainer.scrollWidth - photoContainer.offsetWidth) * 0.7) {
+                if (!isLoading && photoContainer.scrollTop >= photoContainer.scrollHeight - photoContainer.offsetHeight - 200) {
                     isLoading = true;
 
                     loadingMessage.style.display = 'block';
-                    
+
                     setTimeout(function () {
                         for (let i = 0; i < imagesPerPage; i++) {
                             if (currentIndex < totalImages) {
                                 loadNextImage();
                             }
                         }
-
-                        preloadImages(imagePaths, currentIndex, imagesPerPage * 2); // 次の画像群をプリロード
-                        
                         isLoading = false;
 
                         loadingMessage.style.display = 'none';
-                    }, 500); // ロード時間を短縮
+                    }, 500);
                 }
             });
 
-            for (let i = 0; i < initialImageCount; i++) {
-                appendImage(imagePaths[i], i);
-                displayedIndex++;
-                
-                preloadImages(imagePaths, currentIndex, imagesPerPage); // 初期読み込み時にもプリロード
+            // デバイスの向きに応じてレイアウトを変更
+            function updateLayout() {
+                const isVerticalScreen = window.innerHeight > window.innerWidth;
+
+                if (isVerticalScreen) {
+                    photoContainer.style.flexDirection = 'column'; // 縦方向に並べる
+                    photoContainer.style.overflowY = 'auto'; // 縦スクロールを有効化
+                    photoContainer.style.overflowX = 'hidden'; // 横スクロールを無効化
+                } else {
+                    photoContainer.style.flexDirection = 'row'; // 横方向に並べる
+                    photoContainer.style.overflowY = 'hidden'; // 縦スクロールを無効化
+                    photoContainer.style.overflowX = 'auto'; // 横スクロールを有効化
+                }
             }
 
+            window.addEventListener('resize', updateLayout);
+            
+            updateLayout(); // 初期レイアウト設定
         });
     </script>
 </body>
