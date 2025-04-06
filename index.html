@@ -1,23 +1,12 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-J8TLS0STBZ"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-J8TLS0STBZ');
-    </script>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SHIKI SAWAMURA | 澤村 思輝</title>
-    <meta name="description" content="photo by shiki sawamura / 澤村 思輝, Leica">
-    <meta name="keywords" content="澤村 思輝, shiki sawamura">
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <link rel="canonical" href="https://shikisawamura.github.io/web/" />
     <style>
         header {
             position: fixed;
@@ -66,7 +55,6 @@
             width: auto;
             margin-right: 10px;
             transition: opacity 0.5s ease;
-            cursor: pointer;
         }
     </style>
 </head>
@@ -81,34 +69,18 @@
         <a href="about.html">About</a>
     </footer>
     <script>
-        const firstImageId = 'image_0';
-
-        function adjustHeaderFooterSize() {
-            const windowHeight = window.innerHeight;
-            const header = document.querySelector('header');
-            const footer = document.querySelector('footer');
-            const headerPadding = windowHeight * 0.01;
-            header.style.padding = `${headerPadding}px`;
-        }
-
-        adjustHeaderFooterSize();
-        window.addEventListener('resize', adjustHeaderFooterSize);
-
         document.addEventListener('DOMContentLoaded', function () {
             const photoContainer = document.getElementById('photo-container');
             const loadingMessage = document.getElementById('loading-message');
-            const initialImageCount = 20;
-            const imagesPerPage = 20;
-            const totalImages = 640;
+            
+            const initialImageCount = 30; // 初期ロードする画像数
+            const imagesPerPage = 20; // 一度にロードする画像数
+            const totalImages = 640; // 合計画像数
             const imagePaths = generateImagePaths(totalImages);
-            let isLoading = false;
-            let currentIndex = initialImageCount;
-            let displayedIndex = 0;
-
-            // ドラッグスクロール用の変数
-            let isDragging = false;
-            let startX;
-            let scrollLeft;
+            
+            let isLoading = false; // ロード中かどうか
+            let currentIndex = initialImageCount; // 現在ロードされている画像インデックス
+            let displayedIndex = initialImageCount; // 表示されている最後の画像インデックス
 
             function generateImagePaths(count) {
                 const paths = [];
@@ -127,109 +99,74 @@
                 img.onload = function () {
                     img.style.opacity = '1';
                 };
-                const imageId = 'image_' + index;
-                img.id = imageId;
                 photoContainer.appendChild(img);
                 
-                // 画像クリックで中央表示する機能を追加
-                img.addEventListener('click', function() {
+                img.addEventListener('click', function () {
                     centerImage(this);
                 });
+                
+                displayedIndex++;
             }
 
             function loadNextImage() {
                 if (currentIndex < totalImages) {
-                    appendImage(imagePaths[currentIndex], displayedIndex);
+                    appendImage(imagePaths[currentIndex], currentIndex);
                     currentIndex++;
-                    displayedIndex++;
                 }
             }
 
-            // ドラッグスクロール機能の実装
-            photoContainer.addEventListener('mousedown', function(e) {
-                isDragging = true;
-                startX = e.pageX - photoContainer.offsetLeft;
-                scrollLeft = photoContainer.scrollLeft;
-                photoContainer.style.cursor = 'grabbing';
-            });
+            function preloadImages(paths, startIndex, count) {
+                for (let i = 0; i < count; i++) {
+                    if (startIndex + i < paths.length) {
+                        const img = new Image();
+                        img.src = paths[startIndex + i];
+                        console.log(`プリロード中：${paths[startIndex + i]}`);
+                    }
+                }
+            }
 
-            photoContainer.addEventListener('mouseleave', function() {
-                isDragging = false;
-                photoContainer.style.cursor = 'grab';
-            });
-
-            photoContainer.addEventListener('mouseup', function() {
-                isDragging = false;
-                photoContainer.style.cursor = 'grab';
-            });
-
-            photoContainer.addEventListener('mousemove', function(e) {
-                if (!isDragging) return;
-                e.preventDefault();
-                const x = e.pageX - photoContainer.offsetLeft;
-                const walk = (x - startX) * 2; // スクロール速度調整
-                photoContainer.scrollLeft = scrollLeft - walk;
-            });
-
-            // 画像を中央に表示する関数
             function centerImage(img) {
                 const containerWidth = photoContainer.offsetWidth;
                 const imgWidth = img.offsetWidth;
                 const imgLeft = img.offsetLeft;
+
                 const targetScrollLeft = imgLeft - (containerWidth - imgWidth) / 2;
-                
-                // スムーズスクロールでアニメーション効果を追加
+
                 photoContainer.scrollTo({
                     left: targetScrollLeft,
                     behavior: 'smooth'
                 });
             }
 
-            // 初期画像のロード
-            for (let i = 0; i < initialImageCount; i++) {
-                appendImage(imagePaths[i], i);
-                displayedIndex++;
-            }
-
-            // ホイールスクロール
-            window.addEventListener('wheel', function (event) {
-                if (window.innerWidth > window.innerHeight) {
-                    const deltaY = event.deltaY;
-                    const scrollAmount = deltaY * (window.innerWidth / window.innerHeight);
-                    photoContainer.scrollLeft += scrollAmount;
-                    event.preventDefault();
-                }
-            });
-
-            // コンテナスクロール時に追加画像ロード
             photoContainer.addEventListener('scroll', function () {
-                if (!isLoading && photoContainer.scrollLeft >= photoContainer.scrollWidth - photoContainer.offsetWidth - 200) {
+                if (!isLoading && photoContainer.scrollLeft >= (photoContainer.scrollWidth - photoContainer.offsetWidth) * 0.7) {
                     isLoading = true;
+
                     loadingMessage.style.display = 'block';
+                    
                     setTimeout(function () {
                         for (let i = 0; i < imagesPerPage; i++) {
                             if (currentIndex < totalImages) {
                                 loadNextImage();
                             }
                         }
+
+                        preloadImages(imagePaths, currentIndex, imagesPerPage * 2); // 次の画像群をプリロード
+                        
                         isLoading = false;
+
                         loadingMessage.style.display = 'none';
-                    }, 1000);
+                    }, 500); // ロード時間を短縮
                 }
             });
 
-            // 画面サイズに応じてスタイルを更新
-            function updateStyles() {
-                const isWideScreen = window.innerWidth > window.innerHeight;
-                if (isWideScreen) {
-                    photoContainer.style.flexDirection = 'row';
-                } else {
-                    photoContainer.style.flexDirection = 'column';
-                }
+            for (let i = 0; i < initialImageCount; i++) {
+                appendImage(imagePaths[i], i);
+                displayedIndex++;
+                
+                preloadImages(imagePaths, currentIndex, imagesPerPage); // 初期読み込み時にもプリロード
             }
 
-            window.addEventListener('resize', updateStyles);
-            updateStyles();
         });
     </script>
 </body>
