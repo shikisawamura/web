@@ -1,11 +1,10 @@
 body {
-  font-family: 'Open Sans', sans-serif;
-  font-weight: 300;
-  margin: 0;
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 300;
+    margin: 0;
     padding: 0;
     background-color: #f8f8f8; /* オフホワイトの背景色 */
     color: #333; /* 本文のテキストカラーを指定 */
-
 }
 
 header {
@@ -21,7 +20,6 @@ header {
     font-size: 0.75em; /* フォントサイズを半分に縮小 */
     font-family: 'Open Sans', sans-serif;
     font-weight: 300;
-
 }
 
 @media screen and (max-width: 600px) {
@@ -31,12 +29,13 @@ header {
 }
 
 #site-title {
-  font-family: 'Open Sans Light', sans-serif; /* Open Sans Lightを使用 */
-  font-weight: 300;
-  color: #666;
+    font-family: 'Open Sans Light', sans-serif; /* Open Sans Lightを使用 */
+    font-weight: 300;
+    color: #666;
 }
 
-main {
+/* ギャラリー以外のmain要素（Aboutページなど）にのみ適用 */
+main:not(#photo-container) {
     margin-top: 10vh; /* ヘッダーの高さを考慮 */
     text-align: center;
 }
@@ -59,11 +58,11 @@ iframe {
     max-width: 100%; /* 親要素の幅に合わせる */
     height: auto; /* アスペクト比を保つ */
     display: block; /* インライン要素としてではなく、ブロック要素として扱う */
-    margin: left auto; /* 水平方向に中央寄せ */
-
+    margin: 0 auto; /* 【修正】水平方向に中央寄せ */
 }
 
-img {
+/* ギャラリー以外の標準画像スタイル */
+img:not(#photo-container img) {
     max-width: 100%;
     max-height: 100vh; /* 画像の高さをビューポートの高さに合わせる */
     width: auto;
@@ -83,8 +82,6 @@ footer {
     box-shadow: 0 0 0 rgba(0, 0, 0, 0); /* 影を削除 */
     font-size: 16px; /* フォントサイズを上げる */
     text-decoration: underline; /* 下線を追加 */
-
-
 }
 
 footer a {
@@ -93,16 +90,16 @@ footer a {
 }
 
 .youtube-container {
-  position: relative;
-  padding-bottom: 56.25%; /* 動画の縦横比 (9:16) を維持するために必要 */
-  height: 0;
-  overflow: hidden;
+    position: relative;
+    padding-bottom: 56.25%; /* 動画の縦横比 (16:9) を維持するために必要 */
+    height: 0;
+    overflow: hidden;
 }
 
 .youtube-container iframe {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 90%;
-  height: 90%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 90%;
+    height: 90%;
 }
