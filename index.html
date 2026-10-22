@@ -25,6 +25,7 @@
             padding: 0;
             width: 100%;
             height: 100%;
+            height: 100dvh; /* スマホブラウザのUIバーによる高さズレ防止 */
             overflow: hidden; 
         }
 
@@ -59,12 +60,14 @@
             flex-shrink: 0;
         }
 
-        /* コンテナに明確な高さを設け、JSでスクロール可能にする */
+        /* コンテナ設定 */
         #photo-container {
             display: flex;
+            align-items: center; /* 【追加】PCでの上下中央寄せ＆スマホでの左右中央寄せ */
             flex-wrap: nowrap;
             width: 100vw;
             height: 100vh;
+            height: 100dvh;
             overflow-x: hidden; 
             overflow-y: hidden; 
             scrollbar-width: none;
@@ -77,26 +80,42 @@
         }
 
         #photo-container img {
-            flex-shrink: 0; /* 【重要】画像が潰れて消えるのを防ぐ */
+            flex-shrink: 0; 
             max-height: 80vh;
             width: auto;
-            margin-right: 10px;
+            margin-right: 15px; /* PCでの画像間隔 */
             transition: opacity 0.5s ease;
             cursor: pointer;
+        }
+
+        /* PC表示時の最初と最後の余白 */
+        #photo-container img:first-of-type {
+            margin-left: 20px;
+        }
+        #photo-container img:last-of-type {
+            margin-right: 20px;
         }
 
         /* スマホ（縦長画面）向けの画像スタイル調整 */
         @media (max-aspect-ratio: 1/1) {
             #photo-container {
                 flex-direction: column;
-                padding-top: 10vh; /* ヘッダー分少し下げる */
+                /* 【修正】padding-topを削除し、ヘッダー裏の回り込みを許可 */
             }
             #photo-container img {
                 max-height: none;
-                width: 100vw; 
+                width: 90vw; /* 【修正】100vwから90vwにし、左右に5vwずつの白余白を確保 */
                 height: auto;
+                margin-right: 0; /* PC用の余白をリセット */
+                margin-bottom: 25px; /* 画像と画像の縦の間隔 */
+            }
+            #photo-container img:first-of-type {
+                margin-top: 10vh; /* 【修正】最初の画像だけヘッダーに隠れないように位置を下げる */
+                margin-left: 0;
+            }
+            #photo-container img:last-of-type {
                 margin-right: 0;
-                margin-bottom: 10px; 
+                margin-bottom: 10vh; /* 最後の画像の下余白 */
             }
         }
     </style>
@@ -149,17 +168,19 @@
 
             function appendImage(path, index) {
                 const img = new Image();
-                img.alt = '画像の説明';
+                img.alt = '';
                 img.style.opacity = '0';
                 img.id = 'image_' + index;
+                
+                // 【追加】画像のネイティブ読み込み高速化（Lazy Load）と非同期デコード
+                img.loading = 'lazy';
+                img.decoding = 'async';
 
-                // 【重要】srcを代入する「前」にonloadを設定し、透明化バグを防ぐ
                 img.onload = function () {
                     img.style.opacity = '1';
                 };
                 img.src = path;
 
-                // loadingMessageの前に画像を挿入する
                 photoContainer.insertBefore(img, loadingMessage);
                 
                 img.addEventListener('click', function() {
@@ -192,7 +213,7 @@
                 }
             }
 
-            // === マウス・タッチイベント共通の慣性スクロール ===
+            // === 慣性スクロールの処理 ===
             let isDragging = false;
             let startPos = 0;
             let scrollStart = 0;
@@ -292,7 +313,7 @@
                 }
             }, { passive: false });
 
-            // コンテナスクロール時に追加画像ロード
+            // 追加画像ロード
             photoContainer.addEventListener('scroll', function () {
                 const isWideScreen = window.innerWidth > window.innerHeight;
                 let isNearEnd = false;
@@ -314,7 +335,7 @@
                         }
                         isLoading = false;
                         loadingMessage.style.display = 'none';
-                    }, 500);
+                    }, 300); // 待機時間を1000msから300msに短縮し、ロードを高速化
                 }
             });
 
