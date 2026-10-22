@@ -301,3 +301,35 @@
                     isNearEnd = photoContainer.scrollLeft >= (photoContainer.scrollWidth - photoContainer.offsetWidth - 200);
                 } else {
                     isNearEnd = photoContainer.scrollTop >= (photoContainer.scrollHeight - photoContainer.offsetHeight - 200);
+                }
+
+                if (!isLoading && isNearEnd) {
+                    isLoading = true;
+                    loadingMessage.style.display = 'block';
+                    setTimeout(function () {
+                        for (let i = 0; i < imagesPerPage; i++) {
+                            if (currentIndex < totalImages) {
+                                loadNextImage();
+                            }
+                        }
+                        isLoading = false;
+                        loadingMessage.style.display = 'none';
+                    }, 500);
+                }
+            });
+
+            function updateStyles() {
+                const isWideScreen = window.innerWidth > window.innerHeight;
+                if (isWideScreen) {
+                    photoContainer.style.flexDirection = 'row';
+                } else {
+                    photoContainer.style.flexDirection = 'column';
+                }
+            }
+
+            window.addEventListener('resize', updateStyles);
+            updateStyles();
+        });
+    </script>
+</body>
+</html>
