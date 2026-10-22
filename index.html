@@ -19,6 +19,15 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="canonical" href="https://shikisawamura.github.io/web/" />
     <style>
+        /* ネイティブのスクロールを完全に防ぎ、画面を固定 */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; 
+        }
+
         header {
             position: fixed;
             top: 0;
@@ -47,22 +56,28 @@
             display: none;
             text-align: center;
             padding: 10px;
+            flex-shrink: 0;
         }
+
+        /* コンテナに明確な高さを設け、JSでスクロール可能にする */
         #photo-container {
             display: flex;
             flex-wrap: nowrap;
-            max-width: 100%;
-            overflow-x: hidden; /* JSでスクロール制御するためhiddenに設定 */
+            width: 100vw;
+            height: 100vh;
+            overflow-x: hidden; 
             overflow-y: hidden; 
             scrollbar-width: none;
             -ms-overflow-style: none;
             cursor: grab;
-            touch-action: none; /* スマホのブラウザ標準スクロールを無効化 */
+            touch-action: none; 
         }
         #photo-container::-webkit-scrollbar {
             display: none;
         }
+
         #photo-container img {
+            flex-shrink: 0; /* 【重要】画像が潰れて消えるのを防ぐ */
             max-height: 80vh;
             width: auto;
             margin-right: 10px;
@@ -72,12 +87,16 @@
 
         /* スマホ（縦長画面）向けの画像スタイル調整 */
         @media (max-aspect-ratio: 1/1) {
+            #photo-container {
+                flex-direction: column;
+                padding-top: 10vh; /* ヘッダー分少し下げる */
+            }
             #photo-container img {
                 max-height: none;
-                width: 100vw; /* 画面幅いっぱいに表示 */
+                width: 100vw; 
                 height: auto;
                 margin-right: 0;
-                margin-bottom: 10px; /* 下に余白をつける */
+                margin-bottom: 10px; 
             }
         }
     </style>
@@ -99,3 +118,186 @@
             const windowHeight = window.innerHeight;
             const header = document.querySelector('header');
             const footer = document.querySelector('footer');
+            if(header) {
+                const headerPadding = windowHeight * 0.01;
+                header.style.padding = `${headerPadding}px`;
+            }
+        }
+
+        adjustHeaderFooterSize();
+        window.addEventListener('resize', adjustHeaderFooterSize);
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const photoContainer = document.getElementById('photo-container');
+            const loadingMessage = document.getElementById('loading-message');
+            const initialImageCount = 20;
+            const imagesPerPage = 20;
+            const totalImages = 640;
+            const imagePaths = generateImagePaths(totalImages);
+            let isLoading = false;
+            let currentIndex = initialImageCount;
+            let displayedIndex = 0;
+
+            function generateImagePaths(count) {
+                const paths = [];
+                for (let i = count; i >= 1; i--) {
+                    const paddedIndex = i.toString().padStart(4, '0');
+                    paths.push(`images/photo${paddedIndex}.jpg`);
+                }
+                return paths;
+            }
+
+            function appendImage(path, index) {
+                const img = new Image();
+                img.alt = '画像の説明';
+                img.style.opacity = '0';
+                img.id = 'image_' + index;
+
+                // 【重要】srcを代入する「前」にonloadを設定し、透明化バグを防ぐ
+                img.onload = function () {
+                    img.style.opacity = '1';
+                };
+                img.src = path;
+
+                // loadingMessageの前に画像を挿入する
+                photoContainer.insertBefore(img, loadingMessage);
+                
+                img.addEventListener('click', function() {
+                    centerImage(this);
+                });
+            }
+
+            function loadNextImage() {
+                if (currentIndex < totalImages) {
+                    appendImage(imagePaths[currentIndex], displayedIndex);
+                    currentIndex++;
+                    displayedIndex++;
+                }
+            }
+
+            function centerImage(img) {
+                const isWideScreen = window.innerWidth > window.innerHeight;
+                if (isWideScreen) {
+                    const containerWidth = photoContainer.offsetWidth;
+                    const imgWidth = img.offsetWidth;
+                    const imgLeft = img.offsetLeft;
+                    const targetScrollLeft = imgLeft - (containerWidth - imgWidth) / 2;
+                    photoContainer.scrollTo({ left: targetScrollLeft, behavior: 'smooth' });
+                } else {
+                    const containerHeight = photoContainer.offsetHeight;
+                    const imgHeight = img.offsetHeight;
+                    const imgTop = img.offsetTop;
+                    const targetScrollTop = imgTop - (containerHeight - imgHeight) / 2;
+                    photoContainer.scrollTo({ top: targetScrollTop, behavior: 'smooth' });
+                }
+            }
+
+            // === マウス・タッチイベント共通の慣性スクロール ===
+            let isDragging = false;
+            let startPos = 0;
+            let scrollStart = 0;
+            let currentPos = 0;
+            let velocity = 0;
+            let previousPos = 0;
+            let previousTime = 0;
+            let animationFrameId;
+
+            function handleStart(e) {
+                isDragging = true;
+                cancelAnimationFrame(animationFrameId);
+                photoContainer.style.cursor = 'grabbing';
+                
+                const isWideScreen = window.innerWidth > window.innerHeight;
+                const pageX = e.type.includes('touch') ? e.touches[0].pageX : e.pageX;
+                const pageY = e.type.includes('touch') ? e.touches[0].pageY : e.pageY;
+                
+                startPos = isWideScreen ? pageX : pageY;
+                scrollStart = isWideScreen ? photoContainer.scrollLeft : photoContainer.scrollTop;
+                
+                previousPos = startPos;
+                previousTime = Date.now();
+                velocity = 0;
+            }
+
+            function handleMove(e) {
+                if (!isDragging) return;
+                if (e.cancelable) e.preventDefault(); 
+                
+                const isWideScreen = window.innerWidth > window.innerHeight;
+                const pageX = e.type.includes('touch') ? e.touches[0].pageX : e.pageX;
+                const pageY = e.type.includes('touch') ? e.touches[0].pageY : e.pageY;
+                
+                currentPos = isWideScreen ? pageX : pageY;
+                const walk = (startPos - currentPos);
+                
+                if (isWideScreen) {
+                    photoContainer.scrollLeft = scrollStart + walk;
+                } else {
+                    photoContainer.scrollTop = scrollStart + walk;
+                }
+
+                const currentTime = Date.now();
+                const timeDelta = currentTime - previousTime;
+                
+                if (timeDelta > 0) {
+                    velocity = (previousPos - currentPos) / timeDelta;
+                }
+                
+                previousPos = currentPos;
+                previousTime = currentTime;
+            }
+
+            function handleEnd() {
+                isDragging = false;
+                photoContainer.style.cursor = 'grab';
+                applyMomentum();
+            }
+
+            function applyMomentum() {
+                if (Math.abs(velocity) > 0.05) {
+                    const isWideScreen = window.innerWidth > window.innerHeight;
+                    if (isWideScreen) {
+                        photoContainer.scrollLeft += velocity * 15;
+                    } else {
+                        photoContainer.scrollTop += velocity * 15;
+                    }
+                    velocity *= 0.95;
+                    animationFrameId = requestAnimationFrame(applyMomentum);
+                }
+            }
+
+            photoContainer.addEventListener('mousedown', handleStart);
+            photoContainer.addEventListener('mousemove', handleMove);
+            photoContainer.addEventListener('mouseup', handleEnd);
+            photoContainer.addEventListener('mouseleave', handleEnd);
+            
+            photoContainer.addEventListener('touchstart', handleStart, { passive: false });
+            photoContainer.addEventListener('touchmove', handleMove, { passive: false });
+            photoContainer.addEventListener('touchend', handleEnd);
+            photoContainer.addEventListener('touchcancel', handleEnd);
+
+            for (let i = 0; i < initialImageCount; i++) {
+                appendImage(imagePaths[i], i);
+                displayedIndex++;
+            }
+
+            window.addEventListener('wheel', function (event) {
+                const isWideScreen = window.innerWidth > window.innerHeight;
+                if (isWideScreen) {
+                    photoContainer.scrollLeft += event.deltaY;
+                    event.preventDefault();
+                } else {
+                    photoContainer.scrollTop += event.deltaY;
+                    event.preventDefault();
+                }
+            }, { passive: false });
+
+            // コンテナスクロール時に追加画像ロード
+            photoContainer.addEventListener('scroll', function () {
+                const isWideScreen = window.innerWidth > window.innerHeight;
+                let isNearEnd = false;
+
+                if (isWideScreen) {
+                    isNearEnd = photoContainer.scrollLeft >= (photoContainer.scrollWidth - photoContainer.offsetWidth - 200);
+                } else {
+                    isNearEnd = photoContainer.scrollTop >= (photoContainer.scrollHeight - photoContainer.offsetHeight - 200);
