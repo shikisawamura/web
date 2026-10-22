@@ -16,107 +16,77 @@
     <meta name="description" content="photo by shiki sawamura / 澤村 思輝, Leica">
     <meta name="keywords" content="澤村 思輝, shiki sawamura">
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
     <link rel="canonical" href="https://shikisawamura.github.io/web/" />
     <style>
-        /* ネイティブのスクロールを完全に防ぎ、画面を固定 */
         html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            height: 100dvh; /* スマホブラウザのUIバーによる高さズレ防止 */
-            overflow: hidden; 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            height: 100dvh; overflow: hidden; 
+            background-color: #f8f8f8; color: #333;
         }
 
-        header {
-            position: fixed;
-            top: 0;
-            left: 1vw;
+        /* 1. マウスカーソルの自動非表示設定 */
+        body.hide-cursor {
+            cursor: none !important;
+        }
+
+        header, footer {
+            position: fixed; left: 1vw; width: 100%; z-index: 1000;
             background-color: transparent;
-            padding: 10px;
-            margin-bottom: 0;
-            width: 100%;
-            box-shadow: 0 0 0 rgba(0, 0, 0, 0);
-            z-index: 1000;
-            color: #666;
-            font-size: 0.75em;
-            font-family: 'Open Sans', sans-serif;
-            font-weight: 300;
-            height: 10vh;
-            display: flex;
-            align-items: center;
+            font-family: 'Open Sans', sans-serif; font-weight: 300;
+            color: #666; 
+            /* UIフェードアウト用のアニメーション */
+            transition: opacity 0.6s ease;
         }
-        header h1 {
-            margin: 0;
-            height: 10vh;
-            display: flex;
-            align-items: center;
-        }
-        #loading-message {
-            display: none;
-            text-align: center;
-            padding: 10px;
-            flex-shrink: 0;
+        header { top: 0; padding: 10px; font-size: 0.75em; height: 10vh; display: flex; align-items: center; }
+        header h1 { margin: 0; }
+        footer { bottom: 0; padding: 10px; font-size: 16px; text-decoration: underline; }
+        footer a { color: inherit; text-decoration: none; }
+
+        /* 2. スクロール中のUIフェードアウト */
+        body.is-scrolling header, body.is-scrolling footer {
+            opacity: 0 !important; pointer-events: none;
         }
 
-        /* コンテナ設定 */
         #photo-container {
-            display: flex;
-            align-items: center; /* 【追加】PCでの上下中央寄せ＆スマホでの左右中央寄せ */
-            flex-wrap: nowrap;
-            width: 100vw;
-            height: 100vh;
-            height: 100dvh;
-            overflow-x: hidden; 
-            overflow-y: hidden; 
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-            cursor: grab;
-            touch-action: none; 
+            display: flex; align-items: center; flex-wrap: nowrap;
+            width: 100vw; height: 100vh; height: 100dvh;
+            /* カクつき解消: JSではなくCSSネイティブのスクロールを有効化 */
+            overflow-x: auto; overflow-y: hidden; 
+            -webkit-overflow-scrolling: touch; 
+            scrollbar-width: none; -ms-overflow-style: none;
         }
-        #photo-container::-webkit-scrollbar {
-            display: none;
-        }
+        #photo-container::-webkit-scrollbar { display: none; }
 
         #photo-container img {
-            flex-shrink: 0; 
-            max-height: 80vh;
-            width: auto;
-            margin-right: 15px; /* PCでの画像間隔 */
-            transition: opacity 0.5s ease;
-            cursor: pointer;
+            flex-shrink: 0; max-height: 80vh; width: auto;
+            margin-right: 15px; cursor: pointer;
+            -webkit-user-drag: none; user-select: none; /* 誤ドラッグ防止 */
+            
+            /* 3. 画像の「呼吸」用アニメーション（滑らかな拡大縮小） */
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.5s ease;
+            transform-origin: center center;
+            will-change: transform;
+        }
+        
+        /* 呼吸効果: 高速スクロール時に少しだけ（3%）縮小させる */
+        body.is-fast-scrolling #photo-container img {
+            transform: scale(0.97);
         }
 
-        /* PC表示時の最初と最後の余白 */
-        #photo-container img:first-of-type {
-            margin-left: 20px;
-        }
-        #photo-container img:last-of-type {
-            margin-right: 20px;
-        }
+        #photo-container img:first-of-type { margin-left: 20px; }
+        #photo-container img:last-of-type { margin-right: 20px; }
 
-        /* スマホ（縦長画面）向けの画像スタイル調整 */
         @media (max-aspect-ratio: 1/1) {
             #photo-container {
-                flex-direction: column;
-                /* 【修正】padding-topを削除し、ヘッダー裏の回り込みを許可 */
+                flex-direction: column; 
+                overflow-x: hidden; overflow-y: auto; /* スマホ縦スクロール */
             }
             #photo-container img {
-                max-height: none;
-                width: 90vw; /* 【修正】100vwから90vwにし、左右に5vwずつの白余白を確保 */
-                height: auto;
-                margin-right: 0; /* PC用の余白をリセット */
-                margin-bottom: 25px; /* 画像と画像の縦の間隔 */
+                width: 90vw; max-height: none; height: auto;
+                margin-right: 0; margin-bottom: 25px;
             }
-            #photo-container img:first-of-type {
-                margin-top: 10vh; /* 【修正】最初の画像だけヘッダーに隠れないように位置を下げる */
-                margin-left: 0;
-            }
-            #photo-container img:last-of-type {
-                margin-right: 0;
-                margin-bottom: 10vh; /* 最後の画像の下余白 */
-            }
+            #photo-container img:first-of-type { margin-top: 10vh; margin-left: 0; }
+            #photo-container img:last-of-type { margin-right: 0; margin-bottom: 10vh; }
         }
     </style>
 </head>
@@ -125,36 +95,19 @@
         <h1 id="site-title">SHIKI SAWAMURA</h1>
     </header>
     <main id="photo-container">
-        <p id="loading-message">Loading...</p>
+        <!-- 無限ループのためローディングテキストは削除/非表示で進行 -->
     </main>
     <footer>
         <a href="about.html">About</a>
     </footer>
     <script>
-        const firstImageId = 'image_0';
-
-        function adjustHeaderFooterSize() {
-            const windowHeight = window.innerHeight;
-            const header = document.querySelector('header');
-            const footer = document.querySelector('footer');
-            if(header) {
-                const headerPadding = windowHeight * 0.01;
-                header.style.padding = `${headerPadding}px`;
-            }
-        }
-
-        adjustHeaderFooterSize();
-        window.addEventListener('resize', adjustHeaderFooterSize);
-
         document.addEventListener('DOMContentLoaded', function () {
             const photoContainer = document.getElementById('photo-container');
-            const loadingMessage = document.getElementById('loading-message');
-            const initialImageCount = 20;
-            const imagesPerPage = 20;
             const totalImages = 640;
+            const imagesPerPage = 20;
             const imagePaths = generateImagePaths(totalImages);
             let isLoading = false;
-            let currentIndex = initialImageCount;
+            let currentIndex = 0; // 無限ループ用に0からスタート
             let displayedIndex = 0;
 
             function generateImagePaths(count) {
@@ -171,185 +124,147 @@
                 img.alt = '';
                 img.style.opacity = '0';
                 img.id = 'image_' + index;
-                
-                // 【追加】画像のネイティブ読み込み高速化（Lazy Load）と非同期デコード
                 img.loading = 'lazy';
                 img.decoding = 'async';
-
-                img.onload = function () {
-                    img.style.opacity = '1';
-                };
+                img.onload = () => img.style.opacity = '1';
                 img.src = path;
-
-                photoContainer.insertBefore(img, loadingMessage);
                 
-                img.addEventListener('click', function() {
-                    centerImage(this);
-                });
+                photoContainer.appendChild(img);
+                img.addEventListener('click', function() { centerImage(this); });
             }
 
+            // 4. 無限ループスクロール処理
             function loadNextImage() {
-                if (currentIndex < totalImages) {
-                    appendImage(imagePaths[currentIndex], displayedIndex);
-                    currentIndex++;
-                    displayedIndex++;
-                }
+                // 総枚数を超えたら配列の最初に戻る（モジュロ演算）
+                const pathIndex = currentIndex % totalImages;
+                appendImage(imagePaths[pathIndex], displayedIndex);
+                currentIndex++;
+                displayedIndex++;
             }
 
+            // 初期読み込み
+            for (let i = 0; i < 20; i++) loadNextImage();
+
+            // 画像を中央に寄せる（クリック時・キーボード用）
             function centerImage(img) {
                 const isWideScreen = window.innerWidth > window.innerHeight;
                 if (isWideScreen) {
-                    const containerWidth = photoContainer.offsetWidth;
-                    const imgWidth = img.offsetWidth;
-                    const imgLeft = img.offsetLeft;
-                    const targetScrollLeft = imgLeft - (containerWidth - imgWidth) / 2;
+                    const targetScrollLeft = img.offsetLeft - (photoContainer.offsetWidth - img.offsetWidth) / 2;
                     photoContainer.scrollTo({ left: targetScrollLeft, behavior: 'smooth' });
                 } else {
-                    const containerHeight = photoContainer.offsetHeight;
-                    const imgHeight = img.offsetHeight;
-                    const imgTop = img.offsetTop;
-                    const targetScrollTop = imgTop - (containerHeight - imgHeight) / 2;
+                    const targetScrollTop = img.offsetTop - (photoContainer.offsetHeight - img.offsetHeight) / 2;
                     photoContainer.scrollTo({ top: targetScrollTop, behavior: 'smooth' });
                 }
             }
 
-            // === 慣性スクロールの処理 ===
-            let isDragging = false;
-            let startPos = 0;
-            let scrollStart = 0;
-            let currentPos = 0;
-            let velocity = 0;
-            let previousPos = 0;
-            let previousTime = 0;
-            let animationFrameId;
+            // === スクロール監視（UIフェードアウト＆呼吸エフェクト＆無限読み込み） ===
+            let scrollTimeout;
+            let lastScrollPos = 0;
+            let lastScrollTime = Date.now();
 
-            function handleStart(e) {
-                isDragging = true;
-                cancelAnimationFrame(animationFrameId);
-                photoContainer.style.cursor = 'grabbing';
-                
-                const isWideScreen = window.innerWidth > window.innerHeight;
-                const pageX = e.type.includes('touch') ? e.touches[0].pageX : e.pageX;
-                const pageY = e.type.includes('touch') ? e.touches[0].pageY : e.pageY;
-                
-                startPos = isWideScreen ? pageX : pageY;
-                scrollStart = isWideScreen ? photoContainer.scrollLeft : photoContainer.scrollTop;
-                
-                previousPos = startPos;
-                previousTime = Date.now();
-                velocity = 0;
-            }
-
-            function handleMove(e) {
-                if (!isDragging) return;
-                if (e.cancelable) e.preventDefault(); 
-                
-                const isWideScreen = window.innerWidth > window.innerHeight;
-                const pageX = e.type.includes('touch') ? e.touches[0].pageX : e.pageX;
-                const pageY = e.type.includes('touch') ? e.touches[0].pageY : e.pageY;
-                
-                currentPos = isWideScreen ? pageX : pageY;
-                const walk = (startPos - currentPos);
-                
-                if (isWideScreen) {
-                    photoContainer.scrollLeft = scrollStart + walk;
-                } else {
-                    photoContainer.scrollTop = scrollStart + walk;
-                }
-
-                const currentTime = Date.now();
-                const timeDelta = currentTime - previousTime;
-                
-                if (timeDelta > 0) {
-                    velocity = (previousPos - currentPos) / timeDelta;
-                }
-                
-                previousPos = currentPos;
-                previousTime = currentTime;
-            }
-
-            function handleEnd() {
-                isDragging = false;
-                photoContainer.style.cursor = 'grab';
-                applyMomentum();
-            }
-
-            function applyMomentum() {
-                if (Math.abs(velocity) > 0.05) {
-                    const isWideScreen = window.innerWidth > window.innerHeight;
-                    if (isWideScreen) {
-                        photoContainer.scrollLeft += velocity * 15;
-                    } else {
-                        photoContainer.scrollTop += velocity * 15;
-                    }
-                    velocity *= 0.95;
-                    animationFrameId = requestAnimationFrame(applyMomentum);
-                }
-            }
-
-            photoContainer.addEventListener('mousedown', handleStart);
-            photoContainer.addEventListener('mousemove', handleMove);
-            photoContainer.addEventListener('mouseup', handleEnd);
-            photoContainer.addEventListener('mouseleave', handleEnd);
-            
-            photoContainer.addEventListener('touchstart', handleStart, { passive: false });
-            photoContainer.addEventListener('touchmove', handleMove, { passive: false });
-            photoContainer.addEventListener('touchend', handleEnd);
-            photoContainer.addEventListener('touchcancel', handleEnd);
-
-            for (let i = 0; i < initialImageCount; i++) {
-                appendImage(imagePaths[i], i);
-                displayedIndex++;
-            }
-
-            window.addEventListener('wheel', function (event) {
-                const isWideScreen = window.innerWidth > window.innerHeight;
-                if (isWideScreen) {
-                    photoContainer.scrollLeft += event.deltaY;
-                    event.preventDefault();
-                } else {
-                    photoContainer.scrollTop += event.deltaY;
-                    event.preventDefault();
-                }
-            }, { passive: false });
-
-            // 追加画像ロード
             photoContainer.addEventListener('scroll', function () {
                 const isWideScreen = window.innerWidth > window.innerHeight;
-                let isNearEnd = false;
+                const currentPos = isWideScreen ? photoContainer.scrollLeft : photoContainer.scrollTop;
+                const currentTime = Date.now();
+                
+                // 1. UIを非表示にする
+                document.body.classList.add('is-scrolling');
 
-                if (isWideScreen) {
-                    isNearEnd = photoContainer.scrollLeft >= (photoContainer.scrollWidth - photoContainer.offsetWidth - 200);
-                } else {
-                    isNearEnd = photoContainer.scrollTop >= (photoContainer.scrollHeight - photoContainer.offsetHeight - 200);
+                // 2. スクロール速度を計算して「呼吸（縮小）」を適用
+                const timeDiff = currentTime - lastScrollTime;
+                if (timeDiff > 0) {
+                    const speed = Math.abs(currentPos - lastScrollPos) / timeDiff;
+                    if (speed > 1.2) { // スピードの閾値（数値を下げると少しのスクロールでも縮小）
+                        document.body.classList.add('is-fast-scrolling');
+                    } else {
+                        document.body.classList.remove('is-fast-scrolling');
+                    }
                 }
+                lastScrollPos = currentPos;
+                lastScrollTime = currentTime;
+
+                // スクロール停止時の処理（UI再表示と縮小解除）
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(() => {
+                    document.body.classList.remove('is-scrolling');
+                    document.body.classList.remove('is-fast-scrolling');
+                }, 400); // 400ミリ秒止まったら元に戻る
+
+                // 3. 無限ループのための追加読み込み
+                let isNearEnd = isWideScreen 
+                    ? photoContainer.scrollLeft >= (photoContainer.scrollWidth - photoContainer.offsetWidth - 800)
+                    : photoContainer.scrollTop >= (photoContainer.scrollHeight - photoContainer.offsetHeight - 800);
 
                 if (!isLoading && isNearEnd) {
                     isLoading = true;
-                    loadingMessage.style.display = 'block';
-                    setTimeout(function () {
-                        for (let i = 0; i < imagesPerPage; i++) {
-                            if (currentIndex < totalImages) {
-                                loadNextImage();
-                            }
-                        }
-                        isLoading = false;
-                        loadingMessage.style.display = 'none';
-                    }, 300); // 待機時間を1000msから300msに短縮し、ロードを高速化
+                    for (let i = 0; i < imagesPerPage; i++) loadNextImage();
+                    isLoading = false;
                 }
+            }, { passive: true });
+
+            // === PCでのマウスドラッグスクロール ===
+            let isDragging = false, startPos = 0, scrollStart = 0;
+            photoContainer.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                const isWideScreen = window.innerWidth > window.innerHeight;
+                startPos = isWideScreen ? e.pageX : e.pageY;
+                scrollStart = isWideScreen ? photoContainer.scrollLeft : photoContainer.scrollTop;
+            });
+            photoContainer.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const isWideScreen = window.innerWidth > window.innerHeight;
+                const currentPos = isWideScreen ? e.pageX : e.pageY;
+                const walk = (startPos - currentPos);
+                if (isWideScreen) photoContainer.scrollLeft = scrollStart + walk;
+                else photoContainer.scrollTop = scrollStart + walk;
+            });
+            window.addEventListener('mouseup', () => isDragging = false);
+            window.addEventListener('mouseleave', () => isDragging = false);
+
+            // PC用マウスホイール対応
+            window.addEventListener('wheel', function (e) {
+                if (window.innerWidth > window.innerHeight) {
+                    photoContainer.scrollLeft += e.deltaY;
+                }
+            }, { passive: true });
+
+            // === マウスカーソルの自動非表示 ===
+            let cursorTimeout;
+            window.addEventListener('mousemove', () => {
+                document.body.classList.remove('hide-cursor');
+                clearTimeout(cursorTimeout);
+                cursorTimeout = setTimeout(() => {
+                    document.body.classList.add('hide-cursor');
+                }, 2500); // 2.5秒間マウスを動かさなければ消える
             });
 
-            function updateStyles() {
-                const isWideScreen = window.innerWidth > window.innerHeight;
-                if (isWideScreen) {
-                    photoContainer.style.flexDirection = 'row';
-                } else {
-                    photoContainer.style.flexDirection = 'column';
-                }
-            }
+            // === 矢印キーでの操作（画像の中央スライド） ===
+            window.addEventListener('keydown', function(e) {
+                const images = Array.from(photoContainer.querySelectorAll('img'));
+                if (!images.length) return;
 
-            window.addEventListener('resize', updateStyles);
-            updateStyles();
+                const isWideScreen = window.innerWidth > window.innerHeight;
+                let centerPos = isWideScreen 
+                    ? photoContainer.scrollLeft + photoContainer.offsetWidth / 2 
+                    : photoContainer.scrollTop + photoContainer.offsetHeight / 2;
+
+                let closestIndex = 0, minDistance = Infinity;
+                images.forEach((img, index) => {
+                    const imgCenter = isWideScreen 
+                        ? img.offsetLeft + img.offsetWidth / 2 
+                        : img.offsetTop + img.offsetHeight / 2;
+                    const distance = Math.abs(imgCenter - centerPos);
+                    if (distance < minDistance) { minDistance = distance; closestIndex = index; }
+                });
+
+                let targetIndex = closestIndex;
+                if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                    targetIndex = Math.min(closestIndex + 1, images.length - 1);
+                } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                    targetIndex = Math.max(closestIndex - 1, 0);
+                }
+                if (targetIndex !== closestIndex) centerImage(images[targetIndex]);
+            });
         });
     </script>
 </body>
