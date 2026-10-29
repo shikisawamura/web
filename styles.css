@@ -7,91 +7,92 @@ body {
     color: #333; /* 本文のテキストカラーを指定 */
 }
 
-header {
+/* === 四隅のUIデザインを完全統一（index.htmlと合わせる） === */
+header, footer {
     position: fixed;
-    top: 0;
-    left: 1vw; /* 左端からの空白を画面解像度に応じて変更 */
-    background-color: transparent; /* 背景を透明に変更 */
-    padding: 10px;
-    width: 100%;
-    box-shadow: 0 0 0 rgba(0, 0, 0, 0); /* 影を削除 */
-    z-index: 1000; /* ヘッダーを他の要素よりも前面に表示 */
-    color: #666; /* グレーのテキストカラーに変更 */
-    font-size: 0.75em; /* フォントサイズを半分に縮小 */
+    z-index: 1000;
+    background-color: transparent;
     font-family: 'Open Sans', sans-serif;
     font-weight: 300;
-}
-
-@media screen and (max-width: 600px) {
-    header {
-        font-size: 1em; /* モバイルビューにおいてフォントサイズを拡大 */
-    }
-}
-
-#site-title {
-    font-family: 'Open Sans Light', sans-serif; /* Open Sans Lightを使用 */
-    font-weight: 300;
+    font-size: 0.75em; /* フォントサイズを統一 */
+    letter-spacing: 0.05em; /* 文字の間隔を統一 */
     color: #666;
+    margin: 0; 
+    padding: 0;
+    line-height: 1;
+    box-shadow: none;
 }
 
-/* ギャラリー以外のmain要素（Aboutページなど）にのみ適用 */
-main:not(#photo-container) {
-    margin-top: 10vh; /* ヘッダーの高さを考慮 */
-    text-align: center;
+/* 画面端からの絶対配置（上下左右一律25px） */
+header {
+    top: 25px;
+    left: 25px;
+    display: flex;
+    align-items: center;
+}
+
+footer {
+    bottom: 25px;
+    left: 25px;
+    width: auto;
+}
+
+/* タイトルのみ一回り大きく */
+#site-title {
+    font-family: 'Open Sans Light', 'Open Sans', sans-serif;
+    font-weight: 300;
+    font-size: 1.15rem; /* index.htmlと統一 */
+    color: #666;
+    margin: 0;
 }
 
 /* リンクのスタイル変更 */
 a {
-    color: inherit; /* 親要素の文字色を継承 */
+    color: inherit;
     text-decoration: none; /* 下線をなくす */
 }
 
-/* 左の空白を追加 */
+/* footerのリンク下線を削除して統一感UP */
+footer a {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* ギャラリー以外のmain要素（Aboutページなど）にのみ適用 */
+main:not(#photo-container) {
+    margin-top: 15vh; /* ヘッダーの位置を考慮して少し余裕を持たせる */
+    text-align: center;
+}
+
+/* Aboutページ本文の配置 */
 #about {
     font-family: 'Open Sans', sans-serif;
     font-weight: 300;
-    margin-left: 2vw; /* 適宜調整 */
+    margin-left: 25px; /* headerやfooterと左端のラインを揃える */
     text-align: left;
 }
 
+/* === メディア・画像関連 === */
 iframe {
-    max-width: 100%; /* 親要素の幅に合わせる */
-    height: auto; /* アスペクト比を保つ */
-    display: block; /* インライン要素としてではなく、ブロック要素として扱う */
-    margin: 0 auto; /* 【修正】水平方向に中央寄せ */
+    max-width: 100%;
+    height: auto;
+    display: block; 
+    margin: 0 auto; 
 }
 
-/* ギャラリー以外の標準画像スタイル */
 img:not(#photo-container img) {
     max-width: 100%;
-    max-height: 100vh; /* 画像の高さをビューポートの高さに合わせる */
+    max-height: 100vh;
     width: auto;
     height: auto;
     margin: 0 auto;
-    padding: 20px; /* 画像周りの余白 */
+    padding: 20px;
     box-sizing: border-box;
-}
-
-footer {
-    position: fixed;
-    bottom: 0;
-    left: 1vw; /* 左端からの空白を画面解像度に応じて変更 */
-    background-color: transparent; /* 背景を透明に変更 */
-    padding: 10px;
-    width: 100%;
-    box-shadow: 0 0 0 rgba(0, 0, 0, 0); /* 影を削除 */
-    font-size: 16px; /* フォントサイズを上げる */
-    text-decoration: underline; /* 下線を追加 */
-}
-
-footer a {
-    text-decoration: none;
-    color: #333;
 }
 
 .youtube-container {
     position: relative;
-    padding-bottom: 56.25%; /* 動画の縦横比 (16:9) を維持するために必要 */
+    padding-bottom: 56.25%; /* 動画の縦横比 (16:9) */
     height: 0;
     overflow: hidden;
 }
