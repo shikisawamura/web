@@ -26,7 +26,7 @@
 
         body.hide-cursor { cursor: none !important; }
 
-        header, footer, #fs-btn {
+        header, footer, #fs-btn, #arrow-hint {
             position: fixed; z-index: 1000; background-color: transparent;
             font-family: 'Open Sans', sans-serif; font-weight: 300;
             color: #666; transition: opacity 0.6s ease;
@@ -40,8 +40,17 @@
         #fs-btn {
             top: 10px; right: 1vw; height: 10vh; padding: 10px;
             border: none; font-size: 0.75em; cursor: pointer;
-            display: none; /* 初期状態は非表示（JSで判定して表示） */
+            display: none; 
             align-items: center; letter-spacing: 0.05em;
+        }
+
+        /* 矢印キー操作のヒントテキスト */
+        #arrow-hint {
+            bottom: 10px; right: 1vw; padding: 10px;
+            font-size: 0.75em; letter-spacing: 0.05em;
+            display: none; /* JSでPC判定時に表示 */
+            pointer-events: none;
+            transition: opacity 1s ease; /* ゆっくり消える */
         }
 
         /* スクロール中のUIフェードアウト */
@@ -94,6 +103,10 @@
     <footer>
         <a href="about.html">About</a>
     </footer>
+
+    <!-- キーボード操作のヒント（PC用） -->
+    <div id="arrow-hint">USE ARROW KEYS</div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const photoContainer = document.getElementById('photo-container');
@@ -104,13 +117,34 @@
             let currentIndex = 0; 
             let displayedIndex = 0;
 
+            // === キーボードヒント表示・消去の処理 ===
+            const arrowHint = document.getElementById('arrow-hint');
+            // マウスなどの精細なポインターを持つデバイス（PC）の場合のみ表示
+            if (window.matchMedia("(pointer: fine)").matches) {
+                arrowHint.style.display = 'block';
+
+                // 初回のアクションでヒントを永久に消去する関数
+                const hideHint = () => {
+                    arrowHint.style.opacity = '0';
+                    setTimeout(() => { arrowHint.style.display = 'none'; }, 1000);
+                    // イベントリスナーを解除して負荷をなくす
+                    window.removeEventListener('keydown', hideHint);
+                    photoContainer.removeEventListener('scroll', hideHint);
+                    photoContainer.removeEventListener('mousedown', hideHint);
+                };
+
+                // 何らかの操作が行われたら消去
+                window.addEventListener('keydown', hideHint, { once: true });
+                photoContainer.addEventListener('scroll', hideHint, { once: true });
+                photoContainer.addEventListener('mousedown', hideHint, { once: true });
+            }
+
             // === フルスクリーン機能の判定と実装 ===
             const fsBtn = document.getElementById('fs-btn');
-            // ブラウザがフルスクリーンAPIをサポートしているか判定
             const fullscreenEnabled = document.fullscreenEnabled || document.webkitFullscreenEnabled;
             
             if (fullscreenEnabled) {
-                fsBtn.style.display = 'flex'; // サポートしている場合のみ表示
+                fsBtn.style.display = 'flex'; 
                 
                 fsBtn.addEventListener('click', () => {
                     const doc = document.documentElement;
@@ -123,7 +157,6 @@
                     }
                 });
 
-                // フルスクリーン状態の変更を監視してテキストを切り替え
                 const updateFsBtnText = () => {
                     if (document.fullscreenElement || document.webkitFullscreenElement) {
                         fsBtn.textContent = 'EXIT';
@@ -158,7 +191,6 @@
                 img.addEventListener('click', function() { centerImage(this); });
             }
 
-            // 無限ループスクロール処理
             function loadNextImage() {
                 const pathIndex = currentIndex % totalImages;
                 appendImage(imagePaths[pathIndex], displayedIndex);
@@ -217,7 +249,6 @@
                 }
             }, { passive: true });
 
-            // PCでのマウスドラッグスクロール
             let isDragging = false, startPos = 0, scrollStart = 0;
             photoContainer.addEventListener('mousedown', (e) => {
                 isDragging = true;
@@ -242,7 +273,6 @@
                 }
             }, { passive: true });
 
-            // マウスカーソルの自動非表示
             let cursorTimeout;
             window.addEventListener('mousemove', () => {
                 document.body.classList.remove('hide-cursor');
@@ -252,7 +282,6 @@
                 }, 2500); 
             });
 
-            // 矢印キーでの操作
             window.addEventListener('keydown', function(e) {
                 const images = Array.from(photoContainer.querySelectorAll('img'));
                 if (!images.length) return;
