@@ -26,32 +26,29 @@
 
         body.hide-cursor { cursor: none !important; }
 
+        /* === 四隅のUIデザインを完全統一 === */
         header, footer, #fs-btn, #arrow-hint {
             position: fixed; z-index: 1000; background-color: transparent;
             font-family: 'Open Sans', sans-serif; font-weight: 300;
+            font-size: 0.75em; /* フォントサイズを統一 */
+            letter-spacing: 0.05em; /* 文字の間隔を統一 */
             color: #666; transition: opacity 0.6s ease;
+            margin: 0; padding: 0;
+            line-height: 1; /* 行の高さを揃えて配置のズレを防ぐ */
         }
-        header { top: 0; left: 1vw; padding: 10px; font-size: 0.75em; height: 10vh; display: flex; align-items: center; }
-        header h1 { margin: 0; }
-        footer { bottom: 0; left: 1vw; padding: 10px; font-size: 16px; text-decoration: underline; width: 100%; }
-        footer a { color: inherit; text-decoration: none; }
+        
+        /* 固有の設定 */
+        header h1 { margin: 0; font-size: 1em; font-weight: 300; }
+        footer a { color: inherit; text-decoration: none; } /* Aboutの下線を削除して統一感UP */
+        #fs-btn { border: none; cursor: pointer; display: none; }
+        #arrow-hint { pointer-events: none; display: none; transition: opacity 1s ease; }
 
-        /* フルスクリーンボタンのスタイル */
-        #fs-btn {
-            top: 10px; right: 1vw; height: 10vh; padding: 10px;
-            border: none; font-size: 0.75em; cursor: pointer;
-            display: none; 
-            align-items: center; letter-spacing: 0.05em;
-        }
+        /* === 画面端からの絶対配置（上下左右一律25px） === */
+        header      { top: 25px; left: 25px; }
+        #fs-btn     { top: 25px; right: 25px; }
+        footer      { bottom: 25px; left: 25px; }
+        #arrow-hint { bottom: 25px; right: 25px; }
 
-        /* 矢印キー操作のヒントテキスト */
-        #arrow-hint {
-            bottom: 10px; right: 1vw; padding: 10px;
-            font-size: 0.75em; letter-spacing: 0.05em;
-            display: none; /* JSでPC判定時に表示 */
-            pointer-events: none;
-            transition: opacity 1s ease; /* ゆっくり消える */
-        }
 
         /* スクロール中のUIフェードアウト */
         body.is-scrolling header, 
@@ -95,7 +92,6 @@
         <h1 id="site-title">SHIKI SAWAMURA</h1>
     </header>
     
-    <!-- フルスクリーンボタン -->
     <button id="fs-btn">FULLSCREEN</button>
 
     <main id="photo-container"></main>
@@ -104,7 +100,6 @@
         <a href="about.html">About</a>
     </footer>
 
-    <!-- キーボード操作のヒント（PC用） -->
     <div id="arrow-hint">USE ARROW KEYS</div>
 
     <script>
@@ -117,34 +112,28 @@
             let currentIndex = 0; 
             let displayedIndex = 0;
 
-            // === キーボードヒント表示・消去の処理 ===
             const arrowHint = document.getElementById('arrow-hint');
-            // マウスなどの精細なポインターを持つデバイス（PC）の場合のみ表示
             if (window.matchMedia("(pointer: fine)").matches) {
                 arrowHint.style.display = 'block';
 
-                // 初回のアクションでヒントを永久に消去する関数
                 const hideHint = () => {
                     arrowHint.style.opacity = '0';
                     setTimeout(() => { arrowHint.style.display = 'none'; }, 1000);
-                    // イベントリスナーを解除して負荷をなくす
                     window.removeEventListener('keydown', hideHint);
                     photoContainer.removeEventListener('scroll', hideHint);
                     photoContainer.removeEventListener('mousedown', hideHint);
                 };
 
-                // 何らかの操作が行われたら消去
                 window.addEventListener('keydown', hideHint, { once: true });
                 photoContainer.addEventListener('scroll', hideHint, { once: true });
                 photoContainer.addEventListener('mousedown', hideHint, { once: true });
             }
 
-            // === フルスクリーン機能の判定と実装 ===
             const fsBtn = document.getElementById('fs-btn');
             const fullscreenEnabled = document.fullscreenEnabled || document.webkitFullscreenEnabled;
             
             if (fullscreenEnabled) {
-                fsBtn.style.display = 'flex'; 
+                fsBtn.style.display = 'block'; 
                 
                 fsBtn.addEventListener('click', () => {
                     const doc = document.documentElement;
@@ -211,7 +200,6 @@
                 }
             }
 
-            // スクロール監視（UIフェードアウト＆呼吸エフェクト＆無限読み込み）
             let scrollTimeout;
             let lastScrollPos = 0;
             let lastScrollTime = Date.now();
